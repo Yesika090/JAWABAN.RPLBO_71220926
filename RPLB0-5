@@ -1,0 +1,174 @@
+import java.util.*;
+
+// Class Mahasiswa
+class Mahasiswa {
+    private String nama;
+    private String nim;
+    private String prodi;
+
+    public Mahasiswa(String nama, String nim, String prodi) {
+        this.nama = nama;
+        this.nim = nim;
+        this.prodi = prodi;
+    }
+
+    public String getNama() { return nama; }
+    public void setNama(String nama) { this.nama = nama; }
+    public String getNim() { return nim; }
+    public String getProdi() { return prodi; }
+    public void setProdi(String prodi) { this.prodi = prodi; }
+}
+
+// Interface Storage
+interface Storage {
+    void insertMahasiswa(Mahasiswa mhs);
+    Mahasiswa getMahasiswa(String nim);
+    void updateMahasiswa(String nim, Mahasiswa mhs);
+    void deleteMahasiswa(String nim);
+}
+
+// Implementasi ArrayListStorage
+class ArrayListStorage implements Storage {
+    private List<Mahasiswa> container = new ArrayList<>();
+
+    public void insertMahasiswa(Mahasiswa mhs) {
+        for (Mahasiswa m : container) {
+            if (m.getNim().equals(mhs.getNim())) {
+                System.out.println("Gagal Insert! NIM " + mhs.getNim() + " sudah ada!");
+                return;
+            }
+        }
+        container.add(mhs);
+        System.out.println("Berhasil mendaftarkan mahasiswa: " + mhs.getNim() + " " + mhs.getNama());
+    }
+
+    public Mahasiswa getMahasiswa(String nim) {
+        for (Mahasiswa m : container) {
+            if (m.getNim().equals(nim)) return m;
+        }
+        return null;
+    }
+
+    public void updateMahasiswa(String nim, Mahasiswa mhs) {
+        for (int i = 0; i < container.size(); i++) {
+            if (container.get(i).getNim().equals(nim)) {
+                container.set(i, mhs);
+                System.out.println("Berhasil update Mahasiswa: " + nim + " " + mhs.getNama());
+                return;
+            }
+        }
+        System.out.println("Mahasiswa dengan NIM " + nim + " tidak ditemukan");
+    }
+
+    public void deleteMahasiswa(String nim) {
+        Iterator<Mahasiswa> it = container.iterator();
+        while (it.hasNext()) {
+            Mahasiswa m = it.next();
+            if (m.getNim().equals(nim)) {
+                it.remove();
+                System.out.println("Berhasil Hapus Mahasiswa: " + nim + " " + m.getNama());
+                return;
+            }
+        }
+        System.out.println("Mahasiswa dengan NIM " + nim + " tidak ditemukan");
+    }
+}
+
+// Implementasi HashMapStorage
+class HashMapStorage implements Storage {
+    private Map<String, Mahasiswa> container = new HashMap<>();
+
+    public void insertMahasiswa(Mahasiswa mhs) {
+        if (container.containsKey(mhs.getNim())) {
+            System.out.println("Gagal Insert! NIM " + mhs.getNim() + " sudah ada!");
+            return;
+        }
+        container.put(mhs.getNim(), mhs);
+        System.out.println("Berhasil mendaftarkan mahasiswa: " + mhs.getNim() + " " + mhs.getNama());
+    }
+
+    public Mahasiswa getMahasiswa(String nim) {
+        return container.getOrDefault(nim, null);
+    }
+
+    public void updateMahasiswa(String nim, Mahasiswa mhs) {
+        if (container.containsKey(nim)) {
+            container.put(nim, mhs);
+            System.out.println("Berhasil update Mahasiswa: " + nim + " " + mhs.getNama());
+        } else {
+            System.out.println("Mahasiswa dengan NIM " + nim + " tidak ditemukan");
+        }
+    }
+
+    public void deleteMahasiswa(String nim) {
+        if (container.remove(nim) != null) {
+            System.out.println("Berhasil Hapus Mahasiswa: " + nim);
+        } else {
+            System.out.println("Mahasiswa dengan NIM " + nim + " tidak ditemukan");
+        }
+    }
+}
+
+// Class RegistorMahasiswa
+class RegistorMahasiswa {
+    private Storage storage;
+
+    public RegistorMahasiswa(Storage storage) {
+        this.storage = storage;
+    }
+
+    public void registerMahasiswaBaru(Mahasiswa newMhs) {
+        storage.insertMahasiswa(newMhs);
+    }
+
+    public void printInformasiMahasiswa(String nim) {
+        Mahasiswa mhs = storage.getMahasiswa(nim);
+        if (mhs == null) {
+            System.out.println("Mahasiswa dengan NIM " + nim + " tidak ditemukan");
+        } else {
+            System.out.println("NIM\t: " + mhs.getNim());
+            System.out.println("Nama\t: " + mhs.getNama());
+            System.out.println("Prodi\t: " + mhs.getProdi());
+        }
+    }
+
+    public void updateMahasiswa(String nim, String name, String prodi) {
+        Mahasiswa mhs = storage.getMahasiswa(nim);
+        if (mhs != null) {
+            mhs.setNama(name);
+            mhs.setProdi(prodi);
+            storage.updateMahasiswa(nim, mhs);
+        } else {
+            System.out.println("Mahasiswa dengan NIM " + nim + " tidak ditemukan");
+        }
+    }
+
+    public void deleteMahasiswa(String nim) {
+        storage.deleteMahasiswa(nim);
+    }
+}
+
+// Main program untuk pengujian
+public class Main {
+    public static void main(String[] args) {
+        Storage storage = new HashMapStorage();
+        RegistorMahasiswa registor = new RegistorMahasiswa(storage);
+
+        System.out.println("=== TES INSERT dan DUPLIKASI ===");
+        registor.registerMahasiswaBaru(new Mahasiswa("Gian", "71210689", "Informatika"));
+        registor.registerMahasiswaBaru(new Mahasiswa("Yandex", "71210683", "Informatika"));
+        registor.registerMahasiswaBaru(new Mahasiswa("Yandex", "71210683", "Informatika"));
+
+        registor.printInformasiMahasiswa("71210689");
+        registor.printInformasiMahasiswa("71210683");
+
+        System.out.println("\n=== TES UPDATE ===");
+        registor.updateMahasiswa("71210683", "Yandi", "Informatika");
+        registor.updateMahasiswa("71210690", "Alex", "Sistem Informasi");
+        registor.printInformasiMahasiswa("71210683");
+
+        System.out.println("\n=== TES DELETE ===");
+        registor.deleteMahasiswa("71210683");
+        registor.deleteMahasiswa("71210683");
+    }
+}
